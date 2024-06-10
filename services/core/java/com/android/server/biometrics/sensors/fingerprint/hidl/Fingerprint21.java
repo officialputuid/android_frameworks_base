@@ -141,6 +141,7 @@ public class Fingerprint21 implements IHwBinder.DeathRecipient, ServiceProvider 
     private final boolean mIsUdfps;
     private final int mSensorId;
     private final boolean mIsPowerbuttonFps;
+    private boolean mCleanup;
     private AidlSession mSession;
 
     private final class BiometricTaskStackListener extends TaskStackListener {
@@ -374,6 +375,9 @@ public class Fingerprint21 implements IHwBinder.DeathRecipient, ServiceProvider 
                             Slog.d(TAG, "Initializing AuthenticationStatsCollector");
                             mAuthenticationStatsCollector = collector;
                         });
+
+	mCleanup = context.getResources().getBoolean(
+                com.android.internal.R.bool.config_cleanupUnusedFingerprints);
 
         try {
             ActivityManager.getService().registerUserSwitchObserver(mUserSwitchObserver, TAG);
@@ -1004,6 +1008,9 @@ public class Fingerprint21 implements IHwBinder.DeathRecipient, ServiceProvider 
 
     private void scheduleInternalCleanup(int userId,
             @Nullable ClientMonitorCallback callback) {
+        if (!mCleanup) {
+            return;
+        }
         mHandler.post(() -> {
             scheduleUpdateActiveUserWithoutHandler(userId);
 
