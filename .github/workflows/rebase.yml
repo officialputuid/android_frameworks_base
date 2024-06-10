@@ -1,0 +1,36 @@
+name: Rebase
+
+on:
+  workflow_dispatch:
+
+jobs:
+  rebase:
+    name: Automatic Rebase
+    runs-on: macos-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set Git Config
+        run: |
+          git config user.name "officialputuid"
+          git config user.email "officialputuid@hack.id"
+
+      - name: Fetch Private Repository
+        env:
+          REPO: ${{ secrets.GH_REPO_PRIVATE }}
+          BRANCH: ${{ secrets.GH_BRANCH_PRIVATE }}
+        run: |
+          git fetch $REPO $BRANCH
+
+      - name: Rebase Onto Fetched Branch
+        run: |
+          git rebase FETCH_HEAD
+
+      - name: Push Changes
+        uses: ad-m/github-push-action@master
+        with:
+          force: true
+          github_token: ${{ secrets.GH_TOKEN }}
